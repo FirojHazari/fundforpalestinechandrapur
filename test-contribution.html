@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Contribution Save</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .test-container {
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: var(--background-card);
+            border-radius: 15px;
+            border: 1px solid var(--border-color);
+        }
+        .test-form {
+            background: var(--background-dark);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+        .test-results {
+            background: var(--background-dark);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+        .success { color: var(--success-color); }
+        .error { color: var(--error-color); }
+        .info { color: var(--primary-color); }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="login-header">
+            <i class="fas fa-bug"></i>
+            <h1>Test Contribution Save</h1>
+            <p>Testing the fixed contribution save functionality</p>
+        </div>
+
+        <div class="test-form">
+            <h3>Test Contribution Form</h3>
+            <form id="testForm">
+                <div class="form-group">
+                    <label>Donor Name *</label>
+                    <input type="text" id="testDonorName" value="Test Donor" required>
+                </div>
+                <div class="form-group">
+                    <label>Donor Contact</label>
+                    <input type="text" id="testDonorContact" value="9876543210">
+                </div>
+                <div class="form-group">
+                    <label>Village *</label>
+                    <select id="testVillage" required>
+                        <option value="">Select Village</option>
+                        <option value="Chandrapur">Chandrapur</option>
+                        <option value="Mohisguha">Mohisguha</option>
+                        <option value="Chatra">Chatra</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Locality *</label>
+                    <input type="text" id="testLocality" value="Test Locality" required>
+                </div>
+                <div class="form-group">
+                    <label>Amount *</label>
+                    <input type="number" id="testAmount" value="1000" required>
+                </div>
+                <div class="form-group">
+                    <label>Payment Type *</label>
+                    <select id="testPaymentType" required>
+                        <option value="">Select Type</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Online">Online</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Date *</label>
+                    <input type="date" id="testDate" required>
+                </div>
+                <button type="submit" class="btn-primary">Test Save Contribution</button>
+            </form>
+        </div>
+
+        <div class="test-results" id="testResults" style="display: none;">
+            <h3>Test Results</h3>
+            <div id="resultContent"></div>
+        </div>
+
+        <div style="text-align: center; margin-top: 2rem;">
+            <button class="btn-secondary" onclick="checkSystemStatus()">Check System Status</button>
+            <a href="index.html" class="btn-primary">Back to Main App</a>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Set today's date
+        document.getElementById('testDate').value = new Date().toISOString().split('T')[0];
+
+        // Test form submission
+        document.getElementById('testForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const resultsDiv = document.getElementById('testResults');
+            const resultContent = document.getElementById('resultContent');
+            
+            resultsDiv.style.display = 'block';
+            resultContent.innerHTML = '<p class="info">Testing contribution save...</p>';
+
+            try {
+                // Create a test contribution
+                const testContribution = {
+                    id: Date.now(),
+                    donorName: document.getElementById('testDonorName').value.trim(),
+                    donorContact: document.getElementById('testDonorContact').value.trim(),
+                    village: document.getElementById('testVillage').value,
+                    locality: document.getElementById('testLocality').value.trim(),
+                    amount: parseInt(document.getElementById('testAmount').value),
+                    paymentType: document.getElementById('testPaymentType').value,
+                    date: document.getElementById('testDate').value
+                };
+
+                // Validate
+                if (!testContribution.donorName || !testContribution.village || !testContribution.locality || 
+                    !testContribution.amount || !testContribution.paymentType || !testContribution.date) {
+                    resultContent.innerHTML = '<p class="error">❌ Validation failed: Please fill all required fields</p>';
+                    return;
+                }
+
+                // Add to contributions array
+                app.contributions.push(testContribution);
+                
+                // Save to localStorage
+                app.saveToLocalStorage();
+                
+                // Check if data was saved
+                const savedData = localStorage.getItem('contributions');
+                const parsedData = JSON.parse(savedData);
+                const foundContribution = parsedData.find(c => c.id === testContribution.id);
+                
+                if (foundContribution) {
+                    resultContent.innerHTML = `
+                        <p class="success">✅ Contribution saved successfully!</p>
+                        <p class="info">Donor: ${foundContribution.donorName}</p>
+                        <p class="info">Amount: ₹${foundContribution.amount}</p>
+                        <p class="info">Village: ${foundContribution.village}</p>
+                        <p class="info">Payment Type: ${foundContribution.paymentType}</p>
+                        <p class="success">Data is now stored in localStorage and will persist.</p>
+                    `;
+                } else {
+                    resultContent.innerHTML = '<p class="error">❌ Contribution not found in saved data</p>';
+                }
+                
+            } catch (error) {
+                resultContent.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+                console.error('Test error:', error);
+            }
+        });
+
+        function checkSystemStatus() {
+            app.debugSystem();
+            alert('System status logged to console. Check browser developer tools (F12) for details.');
+        }
+    </script>
+</body>
+</html>

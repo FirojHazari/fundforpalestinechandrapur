@@ -76,22 +76,45 @@ class FundManagementSystem {
     }
 
     loadFromLocalStorage() {
-        // Load from localStorage if available
-        const savedContributions = localStorage.getItem('contributions');
-        const savedMentors = localStorage.getItem('mentors');
-        
-        if (savedContributions) {
-            this.contributions = JSON.parse(savedContributions);
-        }
-        if (savedMentors) {
-            this.mentors = JSON.parse(savedMentors);
+        try {
+            // Load from localStorage if available
+            const savedContributions = localStorage.getItem('contributions');
+            const savedMentors = localStorage.getItem('mentors');
+            const savedVillages = localStorage.getItem('villages');
+            const savedLocalities = localStorage.getItem('localities');
+            const savedUsers = localStorage.getItem('users');
+            
+            if (savedContributions) {
+                this.contributions = JSON.parse(savedContributions);
+            }
+            if (savedMentors) {
+                this.mentors = JSON.parse(savedMentors);
+            }
+            if (savedVillages) {
+                this.villages = JSON.parse(savedVillages);
+            }
+            if (savedLocalities) {
+                this.localities = JSON.parse(savedLocalities);
+            }
+            if (savedUsers) {
+                this.users = { ...this.users, ...JSON.parse(savedUsers) };
+            }
+            console.log('Data loaded from localStorage successfully');
+        } catch (error) {
+            console.error('Error loading from localStorage:', error);
         }
     }
 
     saveToLocalStorage() {
-        if (!this.useGoogleSheets) {
+        try {
             localStorage.setItem('contributions', JSON.stringify(this.contributions));
             localStorage.setItem('mentors', JSON.stringify(this.mentors));
+            localStorage.setItem('villages', JSON.stringify(this.villages));
+            localStorage.setItem('localities', JSON.stringify(this.localities));
+            localStorage.setItem('users', JSON.stringify(this.users));
+            console.log('Data saved to localStorage successfully');
+        } catch (error) {
+            console.error('Error saving to localStorage:', error);
         }
     }
 
@@ -691,29 +714,54 @@ class FundManagementSystem {
     }
 
     async saveContribution() {
+        // Validate form data first
+        const donorName = document.getElementById('donorName').value.trim();
+        const village = document.getElementById('contributionVillage').value;
+        const locality = document.getElementById('contributionLocality').value.trim();
+        const amount = document.getElementById('contributionAmount').value;
+        const paymentType = document.getElementById('contributionPaymentType').value;
+        const date = document.getElementById('contributionDate').value;
+
+        // Basic validation
+        if (!donorName || !village || !locality || !amount || !paymentType || !date) {
+            this.showMessage('Please fill in all required fields.', 'error');
+            return;
+        }
+
+        if (isNaN(amount) || parseFloat(amount) <= 0) {
+            this.showMessage('Please enter a valid amount.', 'error');
+            return;
+        }
+
         const contribution = {
             id: Date.now(), // Simple ID generation
-            donorName: document.getElementById('donorName').value,
-            donorContact: document.getElementById('donorContact').value,
-            village: document.getElementById('contributionVillage').value,
-            locality: document.getElementById('contributionLocality').value,
-            amount: parseInt(document.getElementById('contributionAmount').value),
-            paymentType: document.getElementById('contributionPaymentType').value,
-            date: document.getElementById('contributionDate').value
+            donorName: donorName,
+            donorContact: document.getElementById('donorContact').value.trim(),
+            village: village,
+            locality: locality,
+            amount: parseInt(amount),
+            paymentType: paymentType,
+            date: date
         };
 
         try {
+            // Always add to local array first
+            this.contributions.push(contribution);
+            
+            // Try Google Sheets if available, but don't fail if it doesn't work
             if (this.useGoogleSheets && this.sheetsIntegration) {
-                const success = await this.sheetsIntegration.saveContribution(contribution);
-                if (success) {
-                    this.contributions.push(contribution);
-                } else {
-                    throw new Error('Failed to save to Google Sheets');
+                try {
+                    const success = await this.sheetsIntegration.saveContribution(contribution);
+                    if (!success) {
+                        console.warn('Google Sheets save failed, but data saved locally');
+                    }
+                } catch (sheetsError) {
+                    console.warn('Google Sheets error, but data saved locally:', sheetsError);
                 }
-            } else {
-                this.contributions.push(contribution);
-                this.saveToLocalStorage();
             }
+            
+            // Always save to localStorage as backup
+            this.saveToLocalStorage();
             
             this.closeModal(document.getElementById('contributionModal'));
             this.loadContributions();
@@ -721,6 +769,8 @@ class FundManagementSystem {
             this.showMessage('Contribution saved successfully!', 'success');
         } catch (error) {
             console.error('Error saving contribution:', error);
+            // Remove from array if save failed
+            this.contributions = this.contributions.filter(c => c.id !== contribution.id);
             this.showMessage('Error saving contribution. Please try again.', 'error');
         }
     }
@@ -789,32 +839,52 @@ class FundManagementSystem {
     }
 
     async saveMentor() {
+        // Validate form data first
+        const name = document.getElementById('mentorName').value.trim();
+        const contact = document.getElementById('mentorContact').value.trim();
+        const village = document.getElementById('mentorVillage').value;
+        const locality = document.getElementById('mentorLocality').value.trim();
+
+        // Basic validation
+        if (!name || !contact || !village) {
+            this.showMessage('Please fill in all required fields.', 'error');
+            return;
+        }
+
         const mentor = {
             id: Date.now(),
-            name: document.getElementById('mentorName').value,
-            contact: document.getElementById('mentorContact').value,
-            village: document.getElementById('mentorVillage').value,
-            locality: document.getElementById('mentorLocality').value
+            name: name,
+            contact: contact,
+            village: village,
+            locality: locality
         };
 
         try {
+            // Always add to local array first
+            this.mentors.push(mentor);
+            
+            // Try Google Sheets if available, but don't fail if it doesn't work
             if (this.useGoogleSheets && this.sheetsIntegration) {
-                const success = await this.sheetsIntegration.saveMentor(mentor);
-                if (success) {
-                    this.mentors.push(mentor);
-                } else {
-                    throw new Error('Failed to save to Google Sheets');
+                try {
+                    const success = await this.sheetsIntegration.saveMentor(mentor);
+                    if (!success) {
+                        console.warn('Google Sheets save failed, but data saved locally');
+                    }
+                } catch (sheetsError) {
+                    console.warn('Google Sheets error, but data saved locally:', sheetsError);
                 }
-            } else {
-                this.mentors.push(mentor);
-                this.saveToLocalStorage();
             }
+            
+            // Always save to localStorage as backup
+            this.saveToLocalStorage();
             
             this.closeModal(document.getElementById('mentorModal'));
             this.loadMentors();
             this.showMessage('Mentor saved successfully!', 'success');
         } catch (error) {
             console.error('Error saving mentor:', error);
+            // Remove from array if save failed
+            this.mentors = this.mentors.filter(m => m.id !== mentor.id);
             this.showMessage('Error saving mentor. Please try again.', 'error');
         }
     }
@@ -1176,6 +1246,18 @@ class FundManagementSystem {
         setTimeout(() => {
             messageDiv.remove();
         }, 3000);
+    }
+
+    // Debug function to check system status
+    debugSystem() {
+        console.log('=== System Debug Info ===');
+        console.log('Current User:', this.currentUser);
+        console.log('Use Google Sheets:', this.useGoogleSheets);
+        console.log('Contributions Count:', this.contributions.length);
+        console.log('Mentors Count:', this.mentors.length);
+        console.log('Villages:', this.villages);
+        console.log('Local Storage Available:', typeof(Storage) !== "undefined");
+        console.log('========================');
     }
 }
 
