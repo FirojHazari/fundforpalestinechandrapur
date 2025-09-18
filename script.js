@@ -63,15 +63,27 @@ class FundManagementSystem {
 
     async loadDataFromSheets() {
         try {
-            const data = await this.sheetsIntegration.syncData();
-            if (data) {
-                this.contributions = data.contributions || [];
-                this.mentors = data.mentors || [];
-                this.users = { ...this.users, ...data.users };
+            console.log('Loading data from Google Sheets...');
+            const contributions = await this.sheetsIntegration.loadContributions();
+            const mentors = await this.sheetsIntegration.loadMentors();
+            
+            if (contributions && contributions.length > 0) {
+                this.contributions = contributions;
+                console.log(`Loaded ${contributions.length} contributions from Google Sheets`);
             }
+            
+            if (mentors && mentors.length > 0) {
+                this.mentors = mentors;
+                console.log(`Loaded ${mentors.length} mentors from Google Sheets`);
+            }
+            
+            // Save to localStorage as backup
+            this.saveToLocalStorage();
+            
         } catch (error) {
             console.error('Error loading data from sheets:', error);
-            this.loadSampleData();
+            // Don't clear existing data, just log the error
+            console.log('Using existing data from localStorage');
         }
     }
 
@@ -151,9 +163,42 @@ class FundManagementSystem {
 
         // Refresh data button
         document.getElementById('refreshDataBtn').addEventListener('click', async () => {
-            await this.syncWithGoogleSheets();
-            this.loadContributions();
-            this.loadDashboard();
+            try {
+                this.showMessage('Refreshing data from Google Sheets...', 'info');
+                
+                if (this.useGoogleSheets && this.sheetsIntegration) {
+                    // Load fresh data from Google Sheets
+                    const contributions = await this.sheetsIntegration.loadContributions();
+                    const mentors = await this.sheetsIntegration.loadMentors();
+                    
+                    if (contributions && contributions.length > 0) {
+                        this.contributions = contributions;
+                        console.log(`Refreshed ${contributions.length} contributions from Google Sheets`);
+                    }
+                    
+                    if (mentors && mentors.length > 0) {
+                        this.mentors = mentors;
+                        console.log(`Refreshed ${mentors.length} mentors from Google Sheets`);
+                    }
+                    
+                    // Save to localStorage as backup
+                    this.saveToLocalStorage();
+                    
+                    this.showMessage('✅ Data refreshed from Google Sheets', 'success');
+                } else {
+                    // If Google Sheets not available, just reload from localStorage
+                    this.loadFromLocalStorage();
+                    this.showMessage('Data refreshed from local storage', 'success');
+                }
+                
+                // Update the display
+                this.loadContributions();
+                this.loadDashboard();
+                
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+                this.showMessage('Error refreshing data. Using existing data.', 'error');
+            }
         });
 
         // Add mentor button
@@ -275,13 +320,34 @@ class FundManagementSystem {
                     const initialized = await this.sheetsIntegration.init();
                     if (initialized) {
                         this.useGoogleSheets = true;
+                        console.log('Google Sheets integration enabled');
+                    } else {
+                        console.log('Google Sheets integration failed, using local storage');
+                        return;
                     }
                 }
                 
                 if (this.useGoogleSheets && this.sheetsIntegration) {
                     console.log('Syncing with Google Sheets...');
                     this.showMessage('Syncing with Google Sheets...', 'info');
-                    await this.loadDataFromSheets();
+                    
+                    // Load data from Google Sheets
+                    const contributions = await this.sheetsIntegration.loadContributions();
+                    const mentors = await this.sheetsIntegration.loadMentors();
+                    
+                    if (contributions && contributions.length > 0) {
+                        this.contributions = contributions;
+                        console.log(`Synced ${contributions.length} contributions from Google Sheets`);
+                    }
+                    
+                    if (mentors && mentors.length > 0) {
+                        this.mentors = mentors;
+                        console.log(`Synced ${mentors.length} mentors from Google Sheets`);
+                    }
+                    
+                    // Save to localStorage as backup
+                    this.saveToLocalStorage();
+                    
                     console.log('Data synced successfully from Google Sheets');
                     this.showMessage('✅ Data synced with Google Sheets', 'success');
                 }
@@ -289,6 +355,8 @@ class FundManagementSystem {
                 console.error('Error syncing with Google Sheets:', error);
                 this.showMessage('⚠️ Could not sync with Google Sheets. Using local data.', 'error');
             }
+        } else {
+            console.log('Google Sheets integration not available');
         }
     }
 
@@ -784,31 +852,42 @@ class FundManagementSystem {
         try {
             // Always add to local array first
             this.contributions.push(contribution);
+            console.log('Contribution added to local array:', contribution);
+            
+            // Always save to localStorage first (this always works)
+            this.saveToLocalStorage();
+            console.log('Contribution saved to localStorage');
             
             // Try Google Sheets if available, but don't fail if it doesn't work
             if (this.useGoogleSheets && this.sheetsIntegration) {
                 try {
+                    console.log('Attempting to save to Google Sheets...');
                     const success = await this.sheetsIntegration.saveContribution(contribution);
-                    if (!success) {
+                    if (success) {
+                        console.log('Successfully saved to Google Sheets');
+                        this.showMessage('✅ Contribution saved to Google Sheets!', 'success');
+                    } else {
                         console.warn('Google Sheets save failed, but data saved locally');
+                        this.showMessage('⚠️ Saved locally (Google Sheets failed)', 'error');
                     }
                 } catch (sheetsError) {
                     console.warn('Google Sheets error, but data saved locally:', sheetsError);
+                    this.showMessage('⚠️ Saved locally (Google Sheets error)', 'error');
                 }
+            } else {
+                console.log('Google Sheets not available, saved to localStorage only');
+                this.showMessage('✅ Contribution saved locally!', 'success');
             }
-            
-            // Always save to localStorage as backup
-            this.saveToLocalStorage();
             
             this.closeModal(document.getElementById('contributionModal'));
             this.loadContributions();
             this.loadDashboard();
-            this.showMessage('Contribution saved successfully!', 'success');
+            
         } catch (error) {
             console.error('Error saving contribution:', error);
             // Remove from array if save failed
             this.contributions = this.contributions.filter(c => c.id !== contribution.id);
-            this.showMessage('Error saving contribution. Please try again.', 'error');
+            this.showMessage('❌ Error saving contribution. Please try again.', 'error');
         }
     }
 

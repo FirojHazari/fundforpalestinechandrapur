@@ -16,20 +16,34 @@ class GoogleSheetsIntegration {
     // Initialize Google Sheets API
     async init() {
         try {
+            // Check if API key is configured
+            if (this.API_KEY === 'YOUR_API_KEY') {
+                console.warn('Google Sheets API key not configured. Using local storage only.');
+                return false;
+            }
+            
             // Load Google Sheets API
             if (!window.gapi) {
                 await this.loadGapi();
             }
             
             // Initialize the API
-            await window.gapi.load('client', () => {
-                window.gapi.client.init({
-                    apiKey: this.API_KEY,
-                    discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4']
+            await new Promise((resolve, reject) => {
+                window.gapi.load('client', async () => {
+                    try {
+                        await window.gapi.client.init({
+                            apiKey: this.API_KEY,
+                            discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4']
+                        });
+                        console.log('Google Sheets API initialized successfully');
+                        resolve();
+                    } catch (error) {
+                        console.error('Failed to initialize Google Sheets API:', error);
+                        reject(error);
+                    }
                 });
             });
             
-            console.log('Google Sheets API initialized successfully');
             return true;
         } catch (error) {
             console.error('Failed to initialize Google Sheets API:', error);

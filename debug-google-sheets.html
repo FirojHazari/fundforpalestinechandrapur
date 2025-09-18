@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Google Sheets Integration</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .debug-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: var(--background-card);
+            border-radius: 15px;
+            border: 1px solid var(--border-color);
+        }
+        .debug-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--background-dark);
+            border-radius: 10px;
+        }
+        .status {
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-weight: 600;
+        }
+        .status.success {
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--success-color);
+            border: 1px solid var(--success-color);
+        }
+        .status.error {
+            background: rgba(255, 68, 68, 0.1);
+            color: var(--error-color);
+            border: 1px solid var(--error-color);
+        }
+        .status.info {
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+        }
+        .debug-log {
+            background: var(--background-hover);
+            padding: 1rem;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <div class="login-header">
+            <i class="fas fa-bug"></i>
+            <h1>Google Sheets Debug Tool</h1>
+            <p>Debug and test Google Sheets integration</p>
+        </div>
+
+        <div class="debug-section">
+            <h3>🔧 Configuration Check</h3>
+            <button class="btn-primary" onclick="checkConfiguration()">Check Configuration</button>
+            <div id="configStatus" class="status" style="display: none;"></div>
+        </div>
+
+        <div class="debug-section">
+            <h3>🔗 Connection Test</h3>
+            <button class="btn-primary" onclick="testConnection()">Test Google Sheets Connection</button>
+            <div id="connectionStatus" class="status" style="display: none;"></div>
+        </div>
+
+        <div class="debug-section">
+            <h3>📊 Data Operations</h3>
+            <div style="display: flex; gap: 10px; margin-bottom: 1rem;">
+                <button class="btn-secondary" onclick="loadData()">Load Data</button>
+                <button class="btn-secondary" onclick="saveTestData()">Save Test Data</button>
+                <button class="btn-secondary" onclick="clearData()">Clear Test Data</button>
+            </div>
+            <div id="dataStatus" class="status" style="display: none;"></div>
+        </div>
+
+        <div class="debug-section">
+            <h3>📋 Debug Log</h3>
+            <div id="debugLog" class="debug-log">Debug log will appear here...</div>
+            <button class="btn-secondary" onclick="clearLog()">Clear Log</button>
+        </div>
+
+        <div class="debug-section">
+            <h3>📝 Current Data</h3>
+            <div id="currentData" class="debug-log">No data loaded yet...</div>
+        </div>
+
+        <div style="text-align: center; margin-top: 2rem;">
+            <a href="index.html" class="btn-primary">Back to Main Application</a>
+        </div>
+    </div>
+
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="google-sheets.js"></script>
+    <script>
+        let sheetsIntegration = null;
+        let debugLog = [];
+
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            debugLog.push(`[${timestamp}] ${message}`);
+            document.getElementById('debugLog').textContent = debugLog.join('\n');
+            console.log(message);
+        }
+
+        function clearLog() {
+            debugLog = [];
+            document.getElementById('debugLog').textContent = 'Debug log cleared...';
+        }
+
+        function showStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = `status ${type}`;
+            element.textContent = message;
+        }
+
+        function checkConfiguration() {
+            log('Checking configuration...');
+            
+            try {
+                const sheetsIntegration = new GoogleSheetsIntegration();
+                log(`Spreadsheet ID: ${sheetsIntegration.SPREADSHEET_ID}`);
+                log(`API Key configured: ${sheetsIntegration.API_KEY !== 'YOUR_API_KEY'}`);
+                log(`Contributions Sheet: ${sheetsIntegration.CONTRIBUTIONS_SHEET}`);
+                
+                if (sheetsIntegration.API_KEY === 'YOUR_API_KEY') {
+                    showStatus('configStatus', '❌ API Key not configured. Please update google-sheets.js', 'error');
+                } else {
+                    showStatus('configStatus', '✅ Configuration looks good', 'success');
+                }
+            } catch (error) {
+                log(`Configuration error: ${error.message}`);
+                showStatus('configStatus', `❌ Configuration error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testConnection() {
+            log('Testing Google Sheets connection...');
+            showStatus('connectionStatus', 'Testing connection...', 'info');
+            
+            try {
+                sheetsIntegration = new GoogleSheetsIntegration();
+                const initialized = await sheetsIntegration.init();
+                
+                if (initialized) {
+                    log('✅ Google Sheets API initialized successfully');
+                    showStatus('connectionStatus', '✅ Google Sheets connection successful!', 'success');
+                } else {
+                    log('❌ Failed to initialize Google Sheets API');
+                    showStatus('connectionStatus', '❌ Failed to initialize Google Sheets API', 'error');
+                }
+            } catch (error) {
+                log(`❌ Connection failed: ${error.message}`);
+                showStatus('connectionStatus', `❌ Connection failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadData() {
+            log('Loading data from Google Sheets...');
+            showStatus('dataStatus', 'Loading data...', 'info');
+            
+            try {
+                if (!sheetsIntegration) {
+                    sheetsIntegration = new GoogleSheetsIntegration();
+                    await sheetsIntegration.init();
+                }
+
+                const contributions = await sheetsIntegration.loadContributions();
+                log(`Loaded ${contributions.length} contributions`);
+                
+                // Display current data
+                document.getElementById('currentData').textContent = JSON.stringify(contributions, null, 2);
+                
+                if (contributions.length > 0) {
+                    showStatus('dataStatus', `✅ Loaded ${contributions.length} contributions`, 'success');
+                } else {
+                    showStatus('dataStatus', 'ℹ️ No contributions found in Google Sheets', 'info');
+                }
+            } catch (error) {
+                log(`❌ Failed to load data: ${error.message}`);
+                showStatus('dataStatus', `❌ Failed to load data: ${error.message}`, 'error');
+            }
+        }
+
+        async function saveTestData() {
+            log('Saving test data to Google Sheets...');
+            showStatus('dataStatus', 'Saving test data...', 'info');
+            
+            try {
+                if (!sheetsIntegration) {
+                    sheetsIntegration = new GoogleSheetsIntegration();
+                    await sheetsIntegration.init();
+                }
+
+                const testContribution = {
+                    date: new Date().toISOString().split('T')[0],
+                    donorName: 'Debug Test Donor',
+                    donorContact: '1234567890',
+                    village: 'Chandrapur',
+                    locality: 'Test Locality',
+                    amount: 1000,
+                    paymentType: 'Cash'
+                };
+
+                const success = await sheetsIntegration.saveContribution(testContribution);
+                
+                if (success) {
+                    log('✅ Test data saved successfully');
+                    showStatus('dataStatus', '✅ Test data saved successfully!', 'success');
+                } else {
+                    log('❌ Failed to save test data');
+                    showStatus('dataStatus', '❌ Failed to save test data', 'error');
+                }
+            } catch (error) {
+                log(`❌ Save failed: ${error.message}`);
+                showStatus('dataStatus', `❌ Save failed: ${error.message}`, 'error');
+            }
+        }
+
+        function clearData() {
+            log('Clearing test data...');
+            document.getElementById('currentData').textContent = 'Data cleared...';
+            showStatus('dataStatus', 'Test data cleared', 'info');
+        }
+
+        // Auto-run configuration check on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            log('Debug tool loaded');
+            checkConfiguration();
+        });
+    </script>
+</body>
+</html>
