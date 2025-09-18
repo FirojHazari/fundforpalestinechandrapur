@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Community Fund Management System</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="google-sheets.js"></script>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <i class="fas fa-shield-alt"></i>
+                <h1>Community Fund System</h1>
+                <p>Secure Access Portal</p>
+            </div>
+            <form id="loginForm">
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="username" placeholder="Username" required>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" placeholder="Password" required>
+                </div>
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Access System
+                </button>
+            </form>
+            <div id="loginError" class="error-message"></div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="app-container" style="display: none;">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <i class="fas fa-shield-alt"></i>
+                <h1>Community Fund Management</h1>
+            </div>
+            <div class="header-right">
+                <span id="userInfo" class="user-info"></span>
+                <button id="logoutBtn" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </button>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-tab="dashboard">
+                <i class="fas fa-tachometer-alt"></i>
+                Dashboard
+            </button>
+            <button class="nav-tab" data-tab="contributions">
+                <i class="fas fa-hand-holding-usd"></i>
+                Contributions
+            </button>
+            <button class="nav-tab" data-tab="mentors">
+                <i class="fas fa-users"></i>
+                Mentors
+            </button>
+            <button class="nav-tab" data-tab="reports">
+                <i class="fas fa-chart-line"></i>
+                Reports
+            </button>
+            <button class="nav-tab" data-tab="settings" id="settingsTab" style="display: none;">
+                <i class="fas fa-cog"></i>
+                Settings
+            </button>
+        </nav>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <div class="dashboard-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="totalFunds">₹0</h3>
+                        <p>Total Funds Collected</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="totalVillages">3</h3>
+                        <p>Active Villages</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="totalContributors">0</h3>
+                        <p>Total Contributors</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-day"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3 id="todayContributions">₹0</h3>
+                        <p>Today's Contributions</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-container">
+                <div class="chart-card">
+                    <h3>Funds by Village</h3>
+                    <canvas id="villageChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Payment Types</h3>
+                    <canvas id="paymentChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Growth Over Time</h3>
+                    <canvas id="growthChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contributions Tab -->
+        <div id="contributions" class="tab-content">
+            <div class="section-header">
+                <h2>Contribution Management</h2>
+                <button id="addContributionBtn" class="btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Add Contribution
+                </button>
+            </div>
+
+            <div class="filters">
+                <div class="filter-group">
+                    <label>Village:</label>
+                    <select id="villageFilter">
+                        <option value="">All Villages</option>
+                        <option value="Chandrapur">Chandrapur</option>
+                        <option value="Mohisguha">Mohisguha</option>
+                        <option value="Chatra">Chatra</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Payment Type:</label>
+                    <select id="paymentFilter">
+                        <option value="">All Types</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Online">Online</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Date Range:</label>
+                    <input type="date" id="dateFrom">
+                    <input type="date" id="dateTo">
+                </div>
+                <div class="filter-group">
+                    <label>Search:</label>
+                    <input type="text" id="searchInput" placeholder="Search by donor name...">
+                </div>
+                <button id="applyFilters" class="btn-secondary">Apply Filters</button>
+                <button id="clearFilters" class="btn-secondary">Clear</button>
+            </div>
+
+            <div class="contributions-table">
+                <table id="contributionsTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Donor Name</th>
+                            <th>Village</th>
+                            <th>Locality</th>
+                            <th>Amount</th>
+                            <th>Payment Type</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="contributionsTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Mentors Tab -->
+        <div id="mentors" class="tab-content">
+            <div class="section-header">
+                <h2>Mentor Management</h2>
+                <button id="addMentorBtn" class="btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Add Mentor
+                </button>
+            </div>
+
+            <div class="mentors-grid" id="mentorsGrid">
+                <!-- Mentors will be dynamically loaded here -->
+            </div>
+        </div>
+
+        <!-- Reports Tab -->
+        <div id="reports" class="tab-content">
+            <div class="section-header">
+                <h2>Reports & Analytics</h2>
+                <div class="export-buttons">
+                    <button id="exportExcel" class="btn-secondary">
+                        <i class="fas fa-file-excel"></i>
+                        Export Excel
+                    </button>
+                    <button id="exportCSV" class="btn-secondary">
+                        <i class="fas fa-file-csv"></i>
+                        Export CSV
+                    </button>
+                    <button id="exportPDF" class="btn-secondary">
+                        <i class="fas fa-file-pdf"></i>
+                        Export PDF
+                    </button>
+                </div>
+            </div>
+
+            <div class="reports-content">
+                <div class="report-card">
+                    <h3>Village Performance</h3>
+                    <div id="villagePerformance" class="performance-stats">
+                        <!-- Performance data will be loaded here -->
+                    </div>
+                </div>
+                <div class="report-card">
+                    <h3>Monthly Trends</h3>
+                    <canvas id="monthlyTrendsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab (Admin Only) -->
+        <div id="settings" class="tab-content">
+            <div class="section-header">
+                <h2>System Settings</h2>
+            </div>
+            <div class="settings-content">
+                <div class="settings-section">
+                    <h3>User Management</h3>
+                    <button id="addUserBtn" class="btn-primary">
+                        <i class="fas fa-user-plus"></i>
+                        Add User
+                    </button>
+                </div>
+                <div class="settings-section">
+                    <h3>Village Management</h3>
+                    <button id="addVillageBtn" class="btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Add Village
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="contributionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add/Edit Contribution</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="contributionForm">
+                <div class="form-group">
+                    <label>Donor Name *</label>
+                    <input type="text" id="donorName" required>
+                </div>
+                <div class="form-group">
+                    <label>Donor Contact</label>
+                    <input type="text" id="donorContact">
+                </div>
+                <div class="form-group">
+                    <label>Village *</label>
+                    <select id="contributionVillage" required>
+                        <option value="">Select Village</option>
+                        <option value="Chandrapur">Chandrapur</option>
+                        <option value="Mohisguha">Mohisguha</option>
+                        <option value="Chatra">Chatra</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Locality *</label>
+                    <input type="text" id="contributionLocality" required>
+                </div>
+                <div class="form-group">
+                    <label>Amount *</label>
+                    <input type="number" id="contributionAmount" required min="0">
+                </div>
+                <div class="form-group">
+                    <label>Payment Type *</label>
+                    <select id="contributionPaymentType" required>
+                        <option value="">Select Type</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Online">Online</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Date *</label>
+                    <input type="date" id="contributionDate" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="cancelContribution">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Contribution</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="mentorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add/Edit Mentor</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="mentorForm">
+                <div class="form-group">
+                    <label>Mentor Name *</label>
+                    <input type="text" id="mentorName" required>
+                </div>
+                <div class="form-group">
+                    <label>Contact *</label>
+                    <input type="text" id="mentorContact" required>
+                </div>
+                <div class="form-group">
+                    <label>Village *</label>
+                    <select id="mentorVillage" required>
+                        <option value="">Select Village</option>
+                        <option value="Chandrapur">Chandrapur</option>
+                        <option value="Mohisguha">Mohisguha</option>
+                        <option value="Chatra">Chatra</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Locality</label>
+                    <input type="text" id="mentorLocality">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="cancelMentor">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Mentor</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- User Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add/Edit User</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="userForm">
+                <div class="form-group">
+                    <label>Username *</label>
+                    <input type="text" id="userUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>Password *</label>
+                    <input type="password" id="userPassword" required>
+                </div>
+                <div class="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" id="userName" required>
+                </div>
+                <div class="form-group">
+                    <label>Role *</label>
+                    <select id="userRole" required>
+                        <option value="">Select Role</option>
+                        <option value="admin">Admin</option>
+                        <option value="core_team">Core Team</option>
+                        <option value="village_manager">Village Manager</option>
+                        <option value="mentor">Mentor</option>
+                    </select>
+                </div>
+                <div class="form-group" id="villageGroup" style="display: none;">
+                    <label>Assigned Village</label>
+                    <select id="userVillage">
+                        <option value="">Select Village</option>
+                        <option value="Chandrapur">Chandrapur</option>
+                        <option value="Mohisguha">Mohisguha</option>
+                        <option value="Chatra">Chatra</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="cancelUser">Cancel</button>
+                    <button type="submit" class="btn-primary">Save User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Village Modal -->
+    <div id="villageModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add/Edit Village</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="villageForm">
+                <div class="form-group">
+                    <label>Village Name *</label>
+                    <input type="text" id="villageName" required>
+                </div>
+                <div class="form-group">
+                    <label>Localities (comma-separated)</label>
+                    <textarea id="villageLocalities" rows="3" placeholder="Main Market, Temple Area, School Road"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="cancelVillage">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Village</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

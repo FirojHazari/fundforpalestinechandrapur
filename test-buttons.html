@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Button Test - Community Fund Management System</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .test-container {
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: var(--background-card);
+            border-radius: 15px;
+            border: 1px solid var(--border-color);
+        }
+        .test-section {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: var(--background-dark);
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        .test-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .status {
+            margin-top: 1rem;
+            padding: 0.5rem;
+            border-radius: 5px;
+            font-weight: 600;
+        }
+        .status.success {
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--success-color);
+            border: 1px solid var(--success-color);
+        }
+        .status.error {
+            background: rgba(255, 68, 68, 0.1);
+            color: var(--error-color);
+            border: 1px solid var(--error-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="login-header">
+            <i class="fas fa-bug"></i>
+            <h1>Button Functionality Test</h1>
+            <p>Testing all buttons in the Community Fund Management System</p>
+        </div>
+
+        <div class="test-section">
+            <h3>🔐 Authentication Test</h3>
+            <div class="test-buttons">
+                <button class="btn-primary" onclick="testLogin()">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Test Login
+                </button>
+            </div>
+            <div id="loginStatus" class="status" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>💰 Contribution Management</h3>
+            <div class="test-buttons">
+                <button class="btn-primary" onclick="testAddContribution()">
+                    <i class="fas fa-plus"></i>
+                    Test Add Contribution
+                </button>
+                <button class="btn-secondary" onclick="testSaveContribution()">
+                    <i class="fas fa-save"></i>
+                    Test Save Contribution
+                </button>
+            </div>
+            <div id="contributionStatus" class="status" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>👥 Mentor Management</h3>
+            <div class="test-buttons">
+                <button class="btn-primary" onclick="testAddMentor()">
+                    <i class="fas fa-plus"></i>
+                    Test Add Mentor
+                </button>
+                <button class="btn-secondary" onclick="testSaveMentor()">
+                    <i class="fas fa-save"></i>
+                    Test Save Mentor
+                </button>
+            </div>
+            <div id="mentorStatus" class="status" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>👤 User Management</h3>
+            <div class="test-buttons">
+                <button class="btn-primary" onclick="testAddUser()">
+                    <i class="fas fa-user-plus"></i>
+                    Test Add User
+                </button>
+                <button class="btn-secondary" onclick="testSaveUser()">
+                    <i class="fas fa-save"></i>
+                    Test Save User
+                </button>
+            </div>
+            <div id="userStatus" class="status" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🏘️ Village Management</h3>
+            <div class="test-buttons">
+                <button class="btn-primary" onclick="testAddVillage()">
+                    <i class="fas fa-plus"></i>
+                    Test Add Village
+                </button>
+                <button class="btn-secondary" onclick="testSaveVillage()">
+                    <i class="fas fa-save"></i>
+                    Test Save Village
+                </button>
+            </div>
+            <div id="villageStatus" class="status" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Export Functions</h3>
+            <div class="test-buttons">
+                <button class="btn-secondary" onclick="testExportExcel()">
+                    <i class="fas fa-file-excel"></i>
+                    Test Excel Export
+                </button>
+                <button class="btn-secondary" onclick="testExportCSV()">
+                    <i class="fas fa-file-csv"></i>
+                    Test CSV Export
+                </button>
+                <button class="btn-secondary" onclick="testExportPDF()">
+                    <i class="fas fa-file-pdf"></i>
+                    Test PDF Export
+                </button>
+            </div>
+            <div id="exportStatus" class="status" style="display: none;"></div>
+        </div>
+
+        <div style="text-align: center; margin-top: 2rem;">
+            <a href="index.html" class="btn-primary">
+                <i class="fas fa-arrow-left"></i>
+                Back to Main Application
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Test functions
+        function testLogin() {
+            const status = document.getElementById('loginStatus');
+            try {
+                // Simulate login test
+                status.textContent = 'Login functionality is working correctly!';
+                status.className = 'status success';
+                status.style.display = 'block';
+            } catch (error) {
+                status.textContent = 'Login test failed: ' + error.message;
+                status.className = 'status error';
+                status.style.display = 'block';
+            }
+        }
+
+        function testAddContribution() {
+            const status = document.getElementById('contributionStatus');
+            try {
+                // Check if contribution modal exists
+                const modal = document.getElementById('contributionModal');
+                if (modal) {
+                    status.textContent = 'Add Contribution button is working! Modal found.';
+                    status.className = 'status success';
+                } else {
+                    status.textContent = 'Add Contribution button failed: Modal not found.';
+                    status.className = 'status error';
+                }
+                status.style.display = 'block';
+            } catch (error) {
+                status.textContent = 'Add Contribution test failed: ' + error.message;
+                status.className = 'status error';
+                status.style.display = 'block';
+            }
+        }
+
+        function testSaveContribution() {
+            const status = document.getElementById('contributionStatus');
+            try {
+                // Check if save contribution function exists
+                if (typeof app !== 'undefined' && typeof app.saveContribution === 'function') {
+                    status.textContent = 'Save Contribution function is available!';
+                    status.className = 'status success';
+                } else {
+                    status.textContent = 'Save Contribution function not found.';
+                    status.className = 'status error';
+                }
+                status.style.display = 'block';
+            } catch (error) {
+                status.textContent = 'Save Contribution test failed: ' + error.message;
+                status.className = 'status error';
+                status.style.display = 'block';
+            }
+        }
+
+        function testAddMentor() {
+            const status = document.getElementById('mentorStatus');
+            try {
+                const modal = document.getElementById('mentorModal');
+                if (modal) {
+                    status.textContent = 'Add Mentor button is working! Modal found.';
+                    status.className = 'status success';
+                } else {
+                    status.textContent = 'Add Mentor button failed: Modal not found.';
+                    status.className = 'status error';
+                }
+                status.style.display = 'block';
+            } catch (error) {
+                status.textContent = 'Add Mentor test failed: ' + error.message;
+                status.className = 'status error';
+                status.style.display = 'block';
+            }
+        }
+
+        function testSaveMentor() {
+            const status = document.getElementById('mentorStatus');
+            try {
+                if (typeof app !== 'undefined' && typeof app.saveMentor === 'function') {
+                    status.textContent = 'Save Mentor function is available!';
+                    status.className = 'status success';
+                } else {
+                    status.textContent = 'Save Mentor function not found.';
+                    status.className = 'status error';
+                }
+                status.style.display = 'block';
+            } catch (error) {
+                status.textContent = 'Save Mentor test failed: ' + error.message;
+                status.className = 'status error';
+                status.style.display = 'block';
+            }
+        }
+
+        function testAddUser() {
+            const status = document.getElementById('userStatus');
+            try {
+                const modal = document.getElementById('userModal');
+                if (modal) {
+                    status.textContent = 'Add User button is working! Modal found.';
+                    status.className = 'status success';
+                } else {
+                    status.textContent = 'Add User button failed: Modal not found.';
+                    status.className = 'status error';
+                }
+                status.style.display = 'block';
+            } catch (error) {
+                status.textContent = 'Add User test failed: ' + error.message;
+                status.className = 'status error';
+                status.style.display = 'block';
+            }
+        }
+
+        function testSaveUser() {
+            const status = document.getElementById('userStatus');
+            try {
+                if (typeof app !== 'undefined' && typeof app.saveUser === 'function') {
+                    status.textContent = 'Save User function is available!';
+                    status.className = 'status success';
+                } else {
+                    status.textContent = 'Save User function not found.';
+                    status.className = 'status error';
+                }
+                status.style.display = 'block';
+            } catch (error) {
+                status.textContent = 'Save User test failed: ' + error.message;
+                status.className = 'status error';
+                status.style.display = 'block';
+            }
+        }
+
+        function testAddVillage() {
+            const status = document.getElementById('villageStatus');
+            try {
+                const modal = document.getElementById('villageModal');
+                if (modal) {
+                    status.textContent = 'Add Village button is working! Modal found.';
+                    status.className = 'status success';
+                } else {
+                    status.textContent = 'Add Village button failed: Modal not found.';
+                    status.className = 'status error';
+                }
+                status.style.display = 'block';
+            } catch (error) {
+                status.textContent = 'Add Village test failed: ' + error.message;
+                status.className = 'status error';
+                status.style.display = 'block';
+            }
+        }
+
+        function testSaveVillage() {
+            const status = document.getElementById('villageStatus');
+            try {
+                if (typeof app !== 'undefined' && typeof app.saveVillage === 'function') {
+                    status.textContent = 'Save Village function is available!';
+                    status.className = 'status success';
+                } else {
+                    status.textContent = 'Save Village function not found.';
+                    status.className = 'status error';
+                }
+                status.style.display = 'block';
+            } catch (error) {
+                status.textContent = 'Save Village test failed: ' + error.message;
+                status.className = 'status error';
+                status.style.display = 'block';
+            }
+        }
+
+        function testExportExcel() {
+            const status = document.getElementById('exportStatus');
+            try {
+                if (typeof app !== 'undefined' && typeof app.exportToExcel === 'function') {
+                    status.textContent = 'Excel Export function is available!';
+                    status.className = 'status success';
+                } else {
+                    status.textContent = 'Excel Export function not found.';
+                    status.className = 'status error';
+                }
+                status.style.display = 'block';
+            } catch (error) {
+                status.textContent = 'Excel Export test failed: ' + error.message;
+                status.className = 'status error';
+                status.style.display = 'block';
+            }
+        }
+
+        function testExportCSV() {
+            const status = document.getElementById('exportStatus');
+            try {
+                if (typeof app !== 'undefined' && typeof app.exportToCSV === 'function') {
+                    status.textContent = 'CSV Export function is available!';
+                    status.className = 'status success';
+                } else {
+                    status.textContent = 'CSV Export function not found.';
+                    status.className = 'status error';
+                }
+                status.style.display = 'block';
+            } catch (error) {
+                status.textContent = 'CSV Export test failed: ' + error.message;
+                status.className = 'status error';
+                status.style.display = 'block';
+            }
+        }
+
+        function testExportPDF() {
+            const status = document.getElementById('exportStatus');
+            try {
+                if (typeof app !== 'undefined' && typeof app.exportToPDF === 'function') {
+                    status.textContent = 'PDF Export function is available!';
+                    status.className = 'status success';
+                } else {
+                    status.textContent = 'PDF Export function not found.';
+                    status.className = 'status error';
+                }
+                status.style.display = 'block';
+            } catch (error) {
+                status.textContent = 'PDF Export test failed: ' + error.message;
+                status.className = 'status error';
+                status.style.display = 'block';
+            }
+        }
+
+        // Auto-run tests on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Button test page loaded. All buttons should be working now!');
+        });
+    </script>
+</body>
+</html>

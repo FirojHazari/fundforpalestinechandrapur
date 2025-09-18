@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup - Community Fund Management System</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .setup-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: var(--background-card);
+            border-radius: 15px;
+            border: 1px solid var(--border-color);
+        }
+        .setup-step {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--background-dark);
+            border-radius: 10px;
+            border-left: 4px solid var(--primary-color);
+        }
+        .setup-step h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        .setup-step ol, .setup-step ul {
+            margin-left: 1.5rem;
+        }
+        .setup-step li {
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+        .code-block {
+            background: var(--background-hover);
+            padding: 1rem;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            color: var(--primary-color);
+            margin: 1rem 0;
+            border: 1px solid var(--border-color);
+        }
+        .btn-setup {
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin: 0.5rem;
+        }
+        .btn-setup:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px var(--glow-color);
+        }
+        .warning {
+            background: rgba(255, 170, 0, 0.1);
+            border: 1px solid var(--warning-color);
+            color: var(--warning-color);
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+        .success {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid var(--success-color);
+            color: var(--success-color);
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="setup-container">
+        <div class="login-header">
+            <i class="fas fa-cog"></i>
+            <h1>Setup Guide</h1>
+            <p>Community Fund Management System</p>
+        </div>
+
+        <div class="setup-step">
+            <h3>🚀 Quick Start (Local Storage)</h3>
+            <p>For immediate testing, you can use the application with local storage:</p>
+            <ol>
+                <li>Open <code>index.html</code> in your web browser</li>
+                <li>Use the default login credentials</li>
+                <li>Start adding contributions and managing data</li>
+            </ol>
+            <a href="index.html" class="btn-setup">Launch Application</a>
+        </div>
+
+        <div class="setup-step">
+            <h3>📊 Google Sheets Integration (Recommended)</h3>
+            <p>For production use with real-time data sync across multiple users:</p>
+            
+            <h4>Step 1: Create Google Spreadsheet</h4>
+            <ol>
+                <li>Go to <a href="https://sheets.google.com" target="_blank">Google Sheets</a></li>
+                <li>Create a new spreadsheet</li>
+                <li>Copy the Spreadsheet ID from the URL (between <code>/d/</code> and <code>/edit</code>)</li>
+            </ol>
+
+            <h4>Step 2: Enable Google Sheets API</h4>
+            <ol>
+                <li>Go to <a href="https://console.cloud.google.com" target="_blank">Google Cloud Console</a></li>
+                <li>Create a new project or select existing one</li>
+                <li>Enable the Google Sheets API</li>
+                <li>Create credentials (API Key)</li>
+                <li>Copy the API Key</li>
+            </ol>
+
+            <h4>Step 3: Configure the Application</h4>
+            <ol>
+                <li>Open <code>google-sheets.js</code></li>
+                <li>Replace <code>YOUR_SPREADSHEET_ID</code> with your actual Spreadsheet ID</li>
+                <li>Replace <code>YOUR_API_KEY</code> with your actual API Key</li>
+            </ol>
+
+            <div class="code-block">
+                // In google-sheets.js, update these values:
+                this.SPREADSHEET_ID = 'your-actual-spreadsheet-id';
+                this.API_KEY = 'your-actual-api-key';
+            </div>
+        </div>
+
+        <div class="setup-step">
+            <h3>👥 Default Login Credentials</h3>
+            <div class="code-block">
+                Admin Access:
+                Username: Firoj
+                Password: Firoj#786
+                
+                Core Team Access:
+                Username: User1, User2, User3, User4, User5
+                Password: 123
+                
+                Village Manager Access:
+                Username: ChandrapurManager, MohisguhaManager, ChatraManager
+                Password: 123
+            </div>
+        </div>
+
+        <div class="setup-step">
+            <h3>🏗️ Customization</h3>
+            <p>To customize the application for your needs:</p>
+            <ul>
+                <li><strong>Add Villages:</strong> Update the <code>villages</code> array in <code>script.js</code></li>
+                <li><strong>Add Users:</strong> Update the <code>users</code> object in <code>script.js</code></li>
+                <li><strong>Change Colors:</strong> Modify CSS variables in <code>styles.css</code></li>
+                <li><strong>Add Features:</strong> Extend the functionality in <code>script.js</code></li>
+            </ul>
+        </div>
+
+        <div class="setup-step">
+            <h3>📱 Features Overview</h3>
+            <ul>
+                <li><strong>Dashboard:</strong> Real-time statistics and charts</li>
+                <li><strong>Contributions:</strong> Add, edit, and manage donor contributions</li>
+                <li><strong>Mentors:</strong> Manage village mentors and their details</li>
+                <li><strong>Reports:</strong> Export data in Excel, CSV, and PDF formats</li>
+                <li><strong>Filtering:</strong> Advanced search and filter options</li>
+                <li><strong>Role-based Access:</strong> Different permissions for different user types</li>
+            </ul>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ Important:</strong> For production use, make sure to:
+            <ul>
+                <li>Change default passwords</li>
+                <li>Set up proper Google Sheets permissions</li>
+                <li>Test all features thoroughly</li>
+                <li>Backup your data regularly</li>
+            </ul>
+        </div>
+
+        <div class="success">
+            <strong>✅ Ready to Go!</strong> Once configured, your Community Fund Management System will be ready for use with all the features you requested.
+        </div>
+
+        <div style="text-align: center; margin-top: 2rem;">
+            <a href="index.html" class="btn-setup">
+                <i class="fas fa-rocket"></i>
+                Launch Application
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Add some interactivity to the setup page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click handlers for better UX
+            const codeBlocks = document.querySelectorAll('.code-block');
+            codeBlocks.forEach(block => {
+                block.addEventListener('click', function() {
+                    const text = this.textContent;
+                    navigator.clipboard.writeText(text).then(() => {
+                        // Show a brief success message
+                        const originalText = this.textContent;
+                        this.textContent = 'Copied to clipboard!';
+                        this.style.color = 'var(--success-color)';
+                        setTimeout(() => {
+                            this.textContent = originalText;
+                            this.style.color = 'var(--primary-color)';
+                        }, 2000);
+                    });
+                });
+                block.style.cursor = 'pointer';
+                block.title = 'Click to copy';
+            });
+        });
+    </script>
+</body>
+</html>
+
