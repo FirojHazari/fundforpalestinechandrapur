@@ -3,9 +3,9 @@
 
 class GoogleSheetsIntegration {
     constructor() {
-        this.SPREADSHEET_ID = 'YOUR_SPREADSHEET_ID'; // Replace with your actual spreadsheet ID
+        this.SPREADSHEET_ID = '1vFeTykyakyL3JUj2ZIz7Y3P3emf2xJlG91-myfBbhiI'; // Your Palestine fund collection spreadsheet
         this.API_KEY = 'YOUR_API_KEY'; // Replace with your actual API key
-        this.CONTRIBUTIONS_SHEET = 'Contributions';
+        this.CONTRIBUTIONS_SHEET = 'Sheet1'; // Using Sheet1 as specified
         this.MENTORS_SHEET = 'Mentors';
         this.USERS_SHEET = 'Users';
         this.VILLAGES_SHEET = 'Villages';
@@ -106,24 +106,24 @@ class GoogleSheetsIntegration {
     // Load all contributions from Google Sheets
     async loadContributions() {
         try {
-            const data = await this.readSheet(this.CONTRIBUTIONS_SHEET);
-            if (data.length <= 1) return []; // No data or only headers
+            const data = await this.readSheet(this.CONTRIBUTIONS_SHEET, 'A:H');
+            if (data.length <= 2) return []; // No data or only headers (rows 1 and 2)
             
             const contributions = [];
-            const headers = data[0];
             
-            for (let i = 1; i < data.length; i++) {
+            // Start from row 3 (index 2) since row 1 is title and row 2 is headers
+            for (let i = 2; i < data.length; i++) {
                 const row = data[i];
-                if (row.length >= headers.length) {
+                if (row.length >= 7 && row[0] && row[1]) { // Check if row has data
                     const contribution = {
-                        id: parseInt(row[0]) || Date.now() + i,
-                        donorName: row[1] || '',
-                        donorContact: row[2] || '',
-                        village: row[3] || '',
-                        locality: row[4] || '',
-                        amount: parseInt(row[5]) || 0,
-                        paymentType: row[6] || '',
-                        date: row[7] || new Date().toISOString().split('T')[0]
+                        id: Date.now() + i, // Generate ID
+                        donorName: row[1] || '', // Column B
+                        donorContact: row[2] || '', // Column C
+                        village: row[3] || '', // Column D
+                        locality: row[4] || '', // Column E
+                        amount: parseInt(row[5]) || 0, // Column F
+                        paymentType: row[6] || '', // Column G
+                        date: row[0] || new Date().toISOString().split('T')[0] // Column A
                     };
                     contributions.push(contribution);
                 }
@@ -139,15 +139,15 @@ class GoogleSheetsIntegration {
     // Save a new contribution to Google Sheets
     async saveContribution(contribution) {
         try {
+            // Format data to match your spreadsheet structure
             const values = [[
-                contribution.id,
-                contribution.donorName,
-                contribution.donorContact,
-                contribution.village,
-                contribution.locality,
-                contribution.amount,
-                contribution.paymentType,
-                contribution.date
+                contribution.date,           // Column A - Date
+                contribution.donorName,     // Column B - Donor Name
+                contribution.donorContact,  // Column C - Contact
+                contribution.village,       // Column D - Village
+                contribution.locality,      // Column E - Locality
+                contribution.amount,        // Column F - Amount
+                contribution.paymentType    // Column G - Payment Type
             ]];
             
             await this.appendToSheet(this.CONTRIBUTIONS_SHEET, values);

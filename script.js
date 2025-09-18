@@ -39,7 +39,7 @@ class FundManagementSystem {
     }
 
     async initializeDataStorage() {
-        // Try to initialize Google Sheets integration
+        // Always try to initialize Google Sheets integration first
         if (window.GoogleSheetsIntegration) {
             try {
                 this.sheetsIntegration = new GoogleSheetsIntegration();
@@ -47,18 +47,18 @@ class FundManagementSystem {
                 if (initialized) {
                     this.useGoogleSheets = true;
                     await this.loadDataFromSheets();
-                    console.log('Google Sheets integration enabled');
+                    console.log('Google Sheets integration enabled - data synced from spreadsheet');
                     return;
                 }
             } catch (error) {
-                console.warn('Google Sheets integration failed, using local storage:', error);
+                console.warn('Google Sheets integration failed:', error);
             }
         }
         
         // Fallback to local storage
         this.loadSampleData();
         this.loadFromLocalStorage();
-        console.log('Using local storage');
+        console.log('Using local storage as fallback');
     }
 
     async loadDataFromSheets() {
@@ -147,6 +147,13 @@ class FundManagementSystem {
         // Add contribution button
         document.getElementById('addContributionBtn').addEventListener('click', () => {
             this.openContributionModal();
+        });
+
+        // Refresh data button
+        document.getElementById('refreshDataBtn').addEventListener('click', async () => {
+            await this.syncWithGoogleSheets();
+            this.loadContributions();
+            this.loadDashboard();
         });
 
         // Add mentor button
@@ -238,7 +245,7 @@ class FundManagementSystem {
         document.getElementById('contributionDate').value = today;
     }
 
-    handleLogin() {
+    async handleLogin() {
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
         const errorDiv = document.getElementById('loginError');
@@ -247,11 +254,41 @@ class FundManagementSystem {
             this.currentUser = { username, ...this.users[username] };
             this.showMainApp();
             this.updateUserInterface();
+            
+            // Always try to sync with Google Sheets on login
+            await this.syncWithGoogleSheets();
+            
             this.loadDashboard();
             errorDiv.style.display = 'none';
         } else {
             errorDiv.textContent = 'Invalid username or password';
             errorDiv.style.display = 'block';
+        }
+    }
+
+    async syncWithGoogleSheets() {
+        // Always try to sync with Google Sheets if available
+        if (window.GoogleSheetsIntegration) {
+            try {
+                if (!this.sheetsIntegration) {
+                    this.sheetsIntegration = new GoogleSheetsIntegration();
+                    const initialized = await this.sheetsIntegration.init();
+                    if (initialized) {
+                        this.useGoogleSheets = true;
+                    }
+                }
+                
+                if (this.useGoogleSheets && this.sheetsIntegration) {
+                    console.log('Syncing with Google Sheets...');
+                    this.showMessage('Syncing with Google Sheets...', 'info');
+                    await this.loadDataFromSheets();
+                    console.log('Data synced successfully from Google Sheets');
+                    this.showMessage('✅ Data synced with Google Sheets', 'success');
+                }
+            } catch (error) {
+                console.error('Error syncing with Google Sheets:', error);
+                this.showMessage('⚠️ Could not sync with Google Sheets. Using local data.', 'error');
+            }
         }
     }
 

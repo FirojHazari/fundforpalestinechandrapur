@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Google Sheets Integration</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .test-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: var(--background-card);
+            border-radius: 15px;
+            border: 1px solid var(--border-color);
+        }
+        .test-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--background-dark);
+            border-radius: 10px;
+        }
+        .status {
+            padding: 1rem;
+            border-radius: 5px;
+            margin: 1rem 0;
+            font-weight: 600;
+        }
+        .status.success {
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--success-color);
+            border: 1px solid var(--success-color);
+        }
+        .status.error {
+            background: rgba(255, 68, 68, 0.1);
+            color: var(--error-color);
+            border: 1px solid var(--error-color);
+        }
+        .status.info {
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+        }
+        .test-form {
+            background: var(--background-hover);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <div class="login-header">
+            <i class="fas fa-cloud"></i>
+            <h1>Google Sheets Integration Test</h1>
+            <p>Testing connection to Palestine Fund Collection Spreadsheet</p>
+        </div>
+
+        <div class="test-section">
+            <h3>🔗 Connection Test</h3>
+            <button class="btn-primary" onclick="testConnection()">Test Google Sheets Connection</button>
+            <div id="connectionStatus" class="status" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Data Sync Test</h3>
+            <button class="btn-primary" onclick="testDataSync()">Load Data from Google Sheets</button>
+            <div id="syncStatus" class="status" style="display: none;"></div>
+            <div id="dataPreview" style="margin-top: 1rem;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>💾 Save Test</h3>
+            <div class="test-form">
+                <h4>Test Contribution</h4>
+                <div class="form-group">
+                    <label>Donor Name</label>
+                    <input type="text" id="testDonorName" value="Test Donor" style="width: 100%; padding: 8px; margin: 5px 0;">
+                </div>
+                <div class="form-group">
+                    <label>Village</label>
+                    <select id="testVillage" style="width: 100%; padding: 8px; margin: 5px 0;">
+                        <option value="Chandrapur">Chandrapur</option>
+                        <option value="Mohisguha">Mohisguha</option>
+                        <option value="Chatra">Chatra</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Amount</label>
+                    <input type="number" id="testAmount" value="500" style="width: 100%; padding: 8px; margin: 5px 0;">
+                </div>
+                <button class="btn-primary" onclick="testSave()">Save Test Contribution</button>
+            </div>
+            <div id="saveStatus" class="status" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📋 Instructions</h3>
+            <div class="status info">
+                <strong>Setup Required:</strong><br>
+                1. Get Google Sheets API key from Google Cloud Console<br>
+                2. Update API_KEY in google-sheets.js file<br>
+                3. Make sure your spreadsheet is accessible<br>
+                4. Test the connection using the buttons above
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 2rem;">
+            <a href="index.html" class="btn-primary">Back to Main Application</a>
+        </div>
+    </div>
+
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="google-sheets.js"></script>
+    <script>
+        let sheetsIntegration = null;
+
+        async function testConnection() {
+            const statusDiv = document.getElementById('connectionStatus');
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'status info';
+            statusDiv.textContent = 'Testing connection...';
+
+            try {
+                sheetsIntegration = new GoogleSheetsIntegration();
+                const initialized = await sheetsIntegration.init();
+                
+                if (initialized) {
+                    statusDiv.className = 'status success';
+                    statusDiv.textContent = '✅ Google Sheets connection successful!';
+                } else {
+                    statusDiv.className = 'status error';
+                    statusDiv.textContent = '❌ Failed to initialize Google Sheets API';
+                }
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = `❌ Connection failed: ${error.message}`;
+                console.error('Connection error:', error);
+            }
+        }
+
+        async function testDataSync() {
+            const statusDiv = document.getElementById('syncStatus');
+            const previewDiv = document.getElementById('dataPreview');
+            
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'status info';
+            statusDiv.textContent = 'Loading data from Google Sheets...';
+
+            try {
+                if (!sheetsIntegration) {
+                    sheetsIntegration = new GoogleSheetsIntegration();
+                    await sheetsIntegration.init();
+                }
+
+                const contributions = await sheetsIntegration.loadContributions();
+                
+                if (contributions.length > 0) {
+                    statusDiv.className = 'status success';
+                    statusDiv.textContent = `✅ Successfully loaded ${contributions.length} contributions from Google Sheets`;
+                    
+                    // Show preview of data
+                    previewDiv.innerHTML = `
+                        <h4>Data Preview (First 3 entries):</h4>
+                        <div style="background: var(--background-card); padding: 1rem; border-radius: 5px; margin-top: 1rem;">
+                            ${contributions.slice(0, 3).map(contrib => `
+                                <div style="margin-bottom: 0.5rem; padding: 0.5rem; background: var(--background-dark); border-radius: 3px;">
+                                    <strong>${contrib.donorName}</strong> - ${contrib.village} - ₹${contrib.amount} (${contrib.paymentType})
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    statusDiv.className = 'status info';
+                    statusDiv.textContent = 'ℹ️ No data found in Google Sheets (this is normal for empty spreadsheet)';
+                }
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = `❌ Failed to load data: ${error.message}`;
+                console.error('Data sync error:', error);
+            }
+        }
+
+        async function testSave() {
+            const statusDiv = document.getElementById('saveStatus');
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'status info';
+            statusDiv.textContent = 'Saving test contribution...';
+
+            try {
+                if (!sheetsIntegration) {
+                    sheetsIntegration = new GoogleSheetsIntegration();
+                    await sheetsIntegration.init();
+                }
+
+                const testContribution = {
+                    date: new Date().toISOString().split('T')[0],
+                    donorName: document.getElementById('testDonorName').value,
+                    donorContact: 'Test Contact',
+                    village: document.getElementById('testVillage').value,
+                    locality: 'Test Locality',
+                    amount: parseInt(document.getElementById('testAmount').value),
+                    paymentType: 'Cash'
+                };
+
+                const success = await sheetsIntegration.saveContribution(testContribution);
+                
+                if (success) {
+                    statusDiv.className = 'status success';
+                    statusDiv.textContent = '✅ Test contribution saved successfully to Google Sheets!';
+                } else {
+                    statusDiv.className = 'status error';
+                    statusDiv.textContent = '❌ Failed to save contribution';
+                }
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = `❌ Save failed: ${error.message}`;
+                console.error('Save error:', error);
+            }
+        }
+
+        // Auto-run connection test on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Google Sheets test page loaded');
+            console.log('Spreadsheet ID: 1vFeTykyakyL3JUj2ZIz7Y3P3emf2xJlG91-myfBbhiI');
+        });
+    </script>
+</body>
+</html>
